@@ -6,12 +6,11 @@ import spacy
 from utils import train_val_test_split, save_pickle, load_glove
 
 
-glove_dir = '/Users/hmamin/data/glove/'
-dtypes = dict(posts=object, sex='category', age=np.int8)
 # Must disable parser, tagger, and ner in nlp() when working with the whole
 # dataset to avoid memory issues.
 nlp = spacy.load('en_core_web_sm')
 nlp.max_length = 600_000_000
+glove_dir = '/Users/hmamin/data/glove/'
 
 
 def build_word_mappings(x_train, nlp, glove_dir):
@@ -21,11 +20,13 @@ def build_word_mappings(x_train, nlp, glove_dir):
                                 disable=['parser', 'tagger', 'ner'])
               for item in [t.text.strip()] if item]
     w2count = dict(filter(lambda x: x[1] > 4, Counter(tokens).items()))
+    save_pickle(tokens, 'tokens')
     save_pickle(w2count, 'w2count')
 
     # Construct w2idx dict and i2w list.
-    w2idx = {k: i for i, (k, v) in
-             enumerate(sorted(w2count.items(), key=lambda x: x[1]), 2)}
+    w2idx = {k: i for i, (k, v) in enumerate(sorted(w2count.items(),
+                                                    key=lambda x: x[1],
+                                                    reverse=True), 2)}
     w2idx['<PAD>'] = 0
     w2idx['<UNK>'] = 1
     i2w = [k for k, v in sorted(w2idx.items(), key=lambda x: x[1])]
@@ -50,7 +51,9 @@ def main(nlp, glove_dir):
         Location to load glove vectors from.
     """
     # Load and split data.
+    dtypes = dict(posts=object, sex='category', age=np.int8)
     df = pd.read_csv('data/posts.csv', dtype=dtypes, usecols=dtypes.keys())
+    df['sex'] = (df.sex == 'male') * 1
     lengths = df.posts.str.split().str.len()
     df = df[(lengths >= 5) & (lengths <= 50)]
     data = train_val_test_split(df.posts, df[['sex', 'age']], train_p=.96,

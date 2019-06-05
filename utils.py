@@ -73,4 +73,5 @@ def train_val_test_split(x, y, train_p, val_p, state=1, shuffle=True):
                                                     y_test,
                                                     test_size=test_p,
                                                     random_state=state)
-    return x_train, x_val, x_test, y_train, y_val, y_test
+    return list(map(lambda x: x.reset_index(drop=True),
+                    [x_train, x_val, x_test, y_train, y_val, y_test]))
