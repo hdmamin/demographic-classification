@@ -9,7 +9,7 @@ from utils import train_val_test_split, save_pickle, load_glove
 # Must disable parser, tagger, and ner in nlp() when working with the whole
 # dataset to avoid memory issues.
 nlp = spacy.load('en_core_web_sm')
-nlp.max_length = 600_000_000
+nlp.max_length = 610_000_000
 glove_dir = '/Users/hmamin/data/glove/'
 
 
@@ -51,13 +51,13 @@ def main(nlp, glove_dir):
         Location to load glove vectors from.
     """
     # Load and split data.
-    dtypes = dict(posts=object, sex='category', age=np.int8)
-    df = pd.read_csv('data/posts.csv', dtype=dtypes, usecols=dtypes.keys())
+    dtypes = dict(text=object, sex='category', age=np.int8)
+    df = pd.read_csv('data/sentences.csv', dtype=dtypes, usecols=dtypes.keys())
     df['sex'] = (df.sex == 'male') * 1
-    lengths = df.posts.str.split().str.len()
+    lengths = df.text.str.split().str.len()
     df = df[(lengths >= 5) & (lengths <= 50)]
-    data = train_val_test_split(df.posts, df[['sex', 'age']], train_p=.96,
-                                val_p=.02, state=1, shuffle=True)
+    data = train_val_test_split(df.text, df[['sex', 'age']], train_p=.99,
+                                val_p=.005, state=1, shuffle=True)
     # Order: x_train, x_val, x_test, y_train, y_val, y_test
     save_pickle(data, 'split_data')
 
